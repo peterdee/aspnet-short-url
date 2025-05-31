@@ -4,6 +4,12 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace aspnet_short_url.Models;
 
+public class ShortUrlPostDto
+{
+  [JsonPropertyName("url")]
+  public string Url { get; set; } = null!;
+}
+
 public class ShortUrl
 {
   [BsonId]

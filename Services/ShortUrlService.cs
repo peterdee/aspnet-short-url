@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using aspnet_short_url.Models;
 
@@ -6,9 +5,13 @@ namespace aspnet_short_url.Services;
 
 public class ShortUrlService
 {
-  private readonly IMongoCollection<ShortUrl> _shortUrlCollection;
+  private readonly MongoClient _client;
 
-  private readonly string ShorUrlCollectionName = "shortUrl";
+  private readonly IMongoDatabase _db;
+
+  private readonly IMongoCollection<ShortUrl> _collection;
+
+  private readonly string shorUrlCollectionName = "shortUrl";
 
   public ShortUrlService()
   {
@@ -24,21 +27,35 @@ public class ShortUrlService
       throw new Exception("Missing required DATABASE_NAME environment variable");
     }
 
-    Console.WriteLine("create client");
-    var mongoClient = new MongoClient(databaseConnectionString);
-    var mongoDatabase = mongoClient.GetDatabase(databaseName);
-    _shortUrlCollection = mongoDatabase.GetCollection<ShortUrl>(ShorUrlCollectionName);
+    _client = new MongoClient(databaseConnectionString);
+    _db = _client.GetDatabase(databaseName);
+    _collection = _db.GetCollection<ShortUrl>(shorUrlCollectionName);
+
+    new Action(async () => await PingDatabase())();
+  }
+
+  private async Task PingDatabase()
+  {
+    try
+    {
+      await _db.RunCommandAsync((Command<MongoDB.Bson.BsonDocument>)"{ping: 1}");
+      Console.WriteLine("Connected to the database");
+    }
+    catch
+    {
+      throw new Exception("Could not ping the database");
+    }
   }
 
   public async Task<ShortUrl?> FindOneByShortIdAsync(string shortId) =>
-      await _shortUrlCollection.Find(x => x.ShortId == shortId).FirstOrDefaultAsync();
+      await _collection.Find(item => item.ShortId == shortId).FirstOrDefaultAsync();
 
   public async Task InsertOneAsync(ShortUrl value) =>
-      await _shortUrlCollection.InsertOneAsync(value);
+      await _collection.InsertOneAsync(value);
 
   public async Task UpdateOneByShortIdAsync(string shortId, ShortUrl updatedValue) =>
-      await _shortUrlCollection.ReplaceOneAsync(x => x.ShortId == shortId, updatedValue);
+      await _collection.ReplaceOneAsync(item => item.ShortId == shortId, updatedValue);
 
   public async Task DeleteOneByShortIdAsync(string shortId) =>
-      await _shortUrlCollection.DeleteOneAsync(x => x.ShortId == shortId);
+      await _collection.DeleteOneAsync(item => item.ShortId == shortId);
 }

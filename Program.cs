@@ -18,10 +18,13 @@ if (port == null || port == "")
 builder.WebHost.UseUrls(["http://localhost:" + port]);
 
 builder.Services.AddSingleton<ShortUrlService>();
-builder.Services.AddControllers()
+builder.Services
+    .AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
 
 var app = builder.Build();
+
+app.MapControllers();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -32,10 +35,5 @@ if (app.Environment.IsDevelopment())
         // TODO: fix Swagger
     });
 }
-
-// app.UseHttpsRedirection();
-
-// TODO: is this really required?
-app.MapControllers();
 
 app.Run();

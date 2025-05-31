@@ -1,24 +1,18 @@
 using Microsoft.AspNetCore.Mvc;
 using aspnet_short_url.Models;
 using aspnet_short_url.Services;
+using aspnet_short_url.Utilities;
 
 namespace aspnet_short_url.Controllers;
 
 [ApiController]
-// TODO: proper routing
-[Route("api/s")]
+[Route("api/url")]
 public class ShortUrlController(ShortUrlService service) : ControllerBase
 {
   private readonly ShortUrlService _service = service;
 
-  [HttpGet]
-  public IActionResult Get()
-  {
-    return Ok();
-  }
-
-  [HttpGet("{id:length(24)}")]
-  public async Task<ActionResult<ShortUrl>> Get(string id)
+  [HttpGet("{id}")]
+  public async Task<ActionResult> Get(string id)
   {
     var record = await _service.FindOneByShortIdAsync(id);
     if (record is null)
@@ -26,18 +20,24 @@ public class ShortUrlController(ShortUrlService service) : ControllerBase
       return NotFound();
     }
 
-    return record;
+    return Redirect(record.OriginalUrl);
   }
 
   [HttpPost]
-  public async Task<IActionResult> Post(ShortUrl value)
+  public async Task<IActionResult> Post([FromForm] ShortUrlPostDto value)
   {
-    await _service.InsertOneAsync(value);
+    var newRecord = new ShortUrl()
+    {
+      OriginalUrl = value.Url,
+      RedirectCount = 0,
+      ShortId = UtilityFunctions.GenerateId(),
+    };
+    await _service.InsertOneAsync(newRecord);
 
-    return CreatedAtAction(nameof(Get), new { id = value.ShortId }, value);
+    return CreatedAtAction(nameof(Get), new { id = newRecord.ShortId }, newRecord);
   }
 
-  [HttpPut("{id:length(24)}")]
+  [HttpPut("{id}")]
   public async Task<IActionResult> Update(string id, ShortUrl value)
   {
     var record = await _service.FindOneByShortIdAsync(id);
@@ -54,7 +54,7 @@ public class ShortUrlController(ShortUrlService service) : ControllerBase
     return NoContent();
   }
 
-  [HttpDelete("{id:length(24)}")]
+  [HttpDelete("{id}")]
   public async Task<IActionResult> Delete(string id)
   {
     var record = await _service.FindOneByShortIdAsync(id);
