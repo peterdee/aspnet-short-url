@@ -1,4 +1,5 @@
 using dotenv.net;
+using aspnet_short_url.Constants;
 using aspnet_short_url.Services;
 
 DotEnv.Load();
@@ -10,10 +11,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 
 // set application port
-var port = Environment.GetEnvironmentVariable("PORT");
+var port = Environment.GetEnvironmentVariable(EnvNames.Port);
 if (port == null || port == "")
 {
-    port = "4500";
+    port = DefaultValues.Port;
 }
 builder.WebHost.UseUrls(["http://localhost:" + port]);
 

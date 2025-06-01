@@ -1,7 +1,8 @@
-using MongoDB.Driver;
-using aspnet_short_url.Models;
-
 namespace aspnet_short_url.Services;
+
+using MongoDB.Driver;
+using aspnet_short_url.Constants;
+using aspnet_short_url.Models;
 
 public class ShortUrlService
 {
@@ -16,15 +17,15 @@ public class ShortUrlService
   public ShortUrlService()
   {
     // get database connection string & database name
-    var databaseConnectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING");
+    var databaseConnectionString = Environment.GetEnvironmentVariable(EnvNames.DatabaseConnectionString);
     if (databaseConnectionString == "" || databaseConnectionString == null)
     {
-      throw new Exception("Missing required DATABASE_CONNECTION_STRING environment variable");
+      throw new Exception($"Missing required {EnvNames.DatabaseConnectionString} environment variable");
     }
-    var databaseName = Environment.GetEnvironmentVariable("DATABASE_NAME");
+    var databaseName = Environment.GetEnvironmentVariable(EnvNames.DatabaseName);
     if (databaseName == "" || databaseName == null)
     {
-      throw new Exception("Missing required DATABASE_NAME environment variable");
+      throw new Exception($"Missing required {EnvNames.DatabaseName} environment variable");
     }
 
     _client = new MongoClient(databaseConnectionString);
@@ -47,15 +48,28 @@ public class ShortUrlService
     }
   }
 
+  public async Task DeleteOneByShortIdAsync(string shortId) =>
+    await _collection.DeleteOneAsync(item => item.ShortId == shortId);
+
   public async Task<ShortUrl?> FindOneByShortIdAsync(string shortId) =>
-      await _collection.Find(item => item.ShortId == shortId).FirstOrDefaultAsync();
+    await _collection.Find(item => item.ShortId == shortId).FirstOrDefaultAsync();
+
+  // TODO: fix
+  // public async Task<ShortUrl?> FindOneByShortIdAndUpdateAsync(
+  //   string shortId,
+  //   ShortUrl update
+  // )
+  // {
+  //   ShortUrl? result = await _collection.FindOneAndUpdateAsync(
+  //     item => item.ShortId == shortId,
+  //     Builders<MongoDB.Bson.BsonDocument>.Update.Inc("redirectCount", 1)
+  //   );
+  //   return result;
+  // }
 
   public async Task InsertOneAsync(ShortUrl value) =>
-      await _collection.InsertOneAsync(value);
+    await _collection.InsertOneAsync(value);
 
   public async Task UpdateOneByShortIdAsync(string shortId, ShortUrl updatedValue) =>
-      await _collection.ReplaceOneAsync(item => item.ShortId == shortId, updatedValue);
-
-  public async Task DeleteOneByShortIdAsync(string shortId) =>
-      await _collection.DeleteOneAsync(item => item.ShortId == shortId);
+    await _collection.ReplaceOneAsync(item => item.ShortId == shortId, updatedValue);
 }

@@ -1,9 +1,9 @@
+namespace aspnet_short_url.Controllers;
+
 using Microsoft.AspNetCore.Mvc;
 using aspnet_short_url.Models;
 using aspnet_short_url.Services;
 using aspnet_short_url.Utilities;
-
-namespace aspnet_short_url.Controllers;
 
 [ApiController]
 [Route("api/url")]
@@ -20,12 +20,35 @@ public class ShortUrlController(ShortUrlService service) : ControllerBase
       return NotFound();
     }
 
+    record.RedirectCount += 1;
+    await _service.UpdateOneByShortIdAsync(id, record);
+
     return Redirect(record.OriginalUrl);
+  }
+
+  [HttpGet("{id}/info")]
+  public async Task<ActionResult> GetInfo(string id)
+  {
+    var record = await _service.FindOneByShortIdAsync(id);
+    if (record is null)
+    {
+      return NotFound();
+    }
+
+    record.RedirectCount += 1;
+    await _service.UpdateOneByShortIdAsync(id, record);
+
+    return Ok(record);
   }
 
   [HttpPost]
   public async Task<IActionResult> Post([FromForm] ShortUrlPostDto value)
   {
+    if (!UtilityFunctions.IsValidUrl(value.Url))
+    {
+      return BadRequest();
+    }
+
     var newRecord = new ShortUrl()
     {
       OriginalUrl = value.Url,

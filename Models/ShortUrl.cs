@@ -14,6 +14,7 @@ public class ShortUrl
 {
   [BsonId]
   [BsonRepresentation(BsonType.ObjectId)]
+  [JsonPropertyName("_id")]
   public string? Id { get; set; }
 
   [BsonElement("OriginalUrl")]
@@ -22,7 +23,7 @@ public class ShortUrl
 
   [BsonElement("RedirectCount")]
   [JsonPropertyName("redirectCount")]
-  public uint RedirectCount { get; set; } = 0;
+  public int RedirectCount { get; set; } = 0;
 
   [BsonElement("ShortId")]
   [JsonPropertyName("shortId")]
