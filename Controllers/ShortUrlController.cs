@@ -1,6 +1,7 @@
 namespace aspnet_short_url.Controllers;
 
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 using aspnet_short_url.Models;
 using aspnet_short_url.Services;
 using aspnet_short_url.Utilities;
@@ -14,14 +15,14 @@ public class ShortUrlController(ShortUrlService service) : ControllerBase
   [HttpGet("{id}")]
   public async Task<ActionResult> Get(string id)
   {
-    var record = await _service.FindOneByShortIdAsync(id);
+    var record = await _service.FindOneByShortIdAndUpdateAsync(
+      id,
+      new BsonDocument("$inc", new BsonDocument("RedirectCount", 1))
+    );
     if (record is null)
     {
       return NotFound();
     }
-
-    record.RedirectCount += 1;
-    await _service.UpdateOneByShortIdAsync(id, record);
 
     return Redirect(record.OriginalUrl);
   }
@@ -29,15 +30,16 @@ public class ShortUrlController(ShortUrlService service) : ControllerBase
   [HttpGet("{id}/info")]
   public async Task<ActionResult> GetInfo(string id)
   {
-    var record = await _service.FindOneByShortIdAsync(id);
+    var record = await _service.FindOneByShortIdAndUpdateAsync(
+      id,
+      new BsonDocument("$inc", new BsonDocument("RedirectCount", 1))
+    );
     if (record is null)
     {
       return NotFound();
     }
 
     record.RedirectCount += 1;
-    await _service.UpdateOneByShortIdAsync(id, record);
-
     return Ok(record);
   }
 

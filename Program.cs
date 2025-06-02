@@ -10,7 +10,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-// set application port
 var port = Environment.GetEnvironmentVariable(EnvNames.Port);
 if (port == null || port == "")
 {

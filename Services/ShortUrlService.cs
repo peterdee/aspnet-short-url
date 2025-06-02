@@ -1,5 +1,6 @@
 namespace aspnet_short_url.Services;
 
+using MongoDB.Bson;
 using MongoDB.Driver;
 using aspnet_short_url.Constants;
 using aspnet_short_url.Models;
@@ -16,7 +17,6 @@ public class ShortUrlService
 
   public ShortUrlService()
   {
-    // get database connection string & database name
     var databaseConnectionString = Environment.GetEnvironmentVariable(EnvNames.DatabaseConnectionString);
     if (databaseConnectionString == "" || databaseConnectionString == null)
     {
@@ -54,18 +54,14 @@ public class ShortUrlService
   public async Task<ShortUrl?> FindOneByShortIdAsync(string shortId) =>
     await _collection.Find(item => item.ShortId == shortId).FirstOrDefaultAsync();
 
-  // TODO: fix
-  // public async Task<ShortUrl?> FindOneByShortIdAndUpdateAsync(
-  //   string shortId,
-  //   ShortUrl update
-  // )
-  // {
-  //   ShortUrl? result = await _collection.FindOneAndUpdateAsync(
-  //     item => item.ShortId == shortId,
-  //     Builders<MongoDB.Bson.BsonDocument>.Update.Inc("redirectCount", 1)
-  //   );
-  //   return result;
-  // }
+  public async Task<ShortUrl?> FindOneByShortIdAndUpdateAsync(
+    string shortId,
+    BsonDocument update
+  )
+  {
+    var result = await _collection.FindOneAndUpdateAsync(item => item.ShortId == shortId, update);
+    return result;
+  }
 
   public async Task InsertOneAsync(ShortUrl value) =>
     await _collection.InsertOneAsync(value);
